@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26228.4
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BspViewer", "BspViewer\BspViewer.csproj", "{CF9AB6E2-8E15-4915-820D-2D0D8F365CBF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BspViewer.Desktop", "BspViewer.Desktop\BspViewer.Desktop.csproj", "{73145ABE-A2EC-40B2-B769-B54DA4CB53A2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CF9AB6E2-8E15-4915-820D-2D0D8F365CBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF9AB6E2-8E15-4915-820D-2D0D8F365CBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF9AB6E2-8E15-4915-820D-2D0D8F365CBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF9AB6E2-8E15-4915-820D-2D0D8F365CBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73145ABE-A2EC-40B2-B769-B54DA4CB53A2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73145ABE-A2EC-40B2-B769-B54DA4CB53A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73145ABE-A2EC-40B2-B769-B54DA4CB53A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73145ABE-A2EC-40B2-B769-B54DA4CB53A2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
