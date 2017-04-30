@@ -1,0 +1,580 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta name="description" content="SourceForge page of the hlbsp project. hlbsp is an open source application. It is an attempt to create a freely available cross platform renderer for the BSP file format of the GoldSrc Engine used by Valve to power HalfLife and its mods.">
+		<meta name="keywords" content="Open Source, Software, Development, Developers, Projects, Downloads, SF.net, SourceForge, English, 3D, 3D engine, engine, SDL, 64-bit MS Windows, 32-bit MS Windows (NT/2000/XP), Linux, GLSL (OpenGL Shading Language), C++, C, 3D Rendering, Data Formats, First Person Shooters, 2 - Pre-Alpha, GNU Library or Lesser General Public License (LGPL), Developers, hlbsp, hlbsp, BSP, binary space partitioning, halflife, Half-Life">
+					   
+		<title>The hlbsp Project</title>
+	</head>
+	<body>
+		<div id="header"> </div>
+		
+		<div id="menu"><ul>
+	<li><a href="http://hlbsp.sourceforge.net/index.php?content=home">Home</a></li>
+	<li><a href="http://hlbsp.sourceforge.net/index.php?content=bspdef">Unofficial BSP v30 File Spec</a></li>
+	<li><a href="http://hlbsp.sourceforge.net/index.php?content=waddef">Unofficial WAD3 File Spec</a></li>
+</ul></div><div id="content">
+<h1>Unofficial BSP v30 File Spec</h1>
+
+<h2>Table of content</h2>
+<ol>
+	<li><a href="#intro">Introduction</a></li>
+	<li><a href="#header">Header</a></li>
+	<li><a href="#entities">LUMP_ENTITIES</a></li>
+	<li><a href="#planes">LUMP_PLANES</a></li>
+	<li><a href="#textures">LUMP_TEXTURES</a></li>
+	<li><a href="#vertices">LUMP_VERTICES</a></li>
+	<li><a href="#vis">LUMP_VISIBILITY</a></li>
+	<li><a href="#nodes">LUMP_NODES</a></li>
+	<li><a href="#texinfo">LUMP_TEXINFO</a></li>
+	<li><a href="#faces">LUMP_FACES</a></li>
+	<li><a href="#lightmaps">LUMP_LIGHTING</a></li>
+	<li><a href="#clipnodes">LUMP_CLIPNODES</a></li>
+	<li><a href="#leaves">LUMP_LEAVES</a></li>
+	<li><a href="#marksurfaces">LUMP_MARKSURFACES</a></li>
+	<li><a href="#edges">LUMP_EDGES</a></li>
+	<li><a href="#surfedges">LUMP_SURFEDGES</a></li>
+	<li><a href="#models">LUMP_MODELS</a></li>
+</ol>
+
+<h2><a name="intro">Introduction</a></h2>
+
+<p>
+The following file specification concerns the BSP file format version 
+30, as it has been designed by the game developper Valve and used in 
+their famous GoldSrc Engine. The file extension is ".bsp".
+</p>
+
+<p>
+<b>Important:</b> The following informations do NOT rely on any 
+officially published file specification from Valve Corporation.
+The file format is still in use by the proprietary Half-Life Engine 
+(better known name of the GoldSrc Engine) implying that there is no 
+public source code of either the file loader or renderer.
+The following specification has been put together based on informations 
+from the open source project <a href="https://sourceforge.net/projects/beng/">Black Engine</a> as well as the compilers included in the Half-Life SDK which also contains their source.
+</p>
+
+<p>
+This file spec uses constructs from the C programming language to 
+describe the different data structures used in the BSP file format.
+Architecture dependent datatypes like integers are replaced by 
+exact-width integer types of the C99 standard in the stdint.h header 
+file, to provide more flexibillity when using x64 platforms.
+Basic knowledge about <a href="http://en.wikipedia.org/wiki/Binary_space_partitioning">Binary Space Partitioning</a>
+ is recommended.
+
+There is a common struct used to represent a point in 3-dimensional 
+space which is used throughout the file spec and the code of the hlbsp 
+project.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#include &lt;stdint.h&gt;</span><br>
+<br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _VECTOR3D<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">float</span> x<span style="color: #339933;">,</span> y<span style="color: #339933;">,</span> z<span style="color: #339933;">;</span><br>
+<span style="color: #009900;">}</span> VECTOR3D<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<h2><a name="header">Header</a></h2>
+
+<p>
+Like almost every file also a BSP file starts with a specific file header which is constucted as follows:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define LUMP_ENTITIES &nbsp; &nbsp; &nbsp;0</span><br>
+<span style="color: #339933;">#define LUMP_PLANES &nbsp; &nbsp; &nbsp; &nbsp;1</span><br>
+<span style="color: #339933;">#define LUMP_TEXTURES &nbsp; &nbsp; &nbsp;2</span><br>
+<span style="color: #339933;">#define LUMP_VERTICES &nbsp; &nbsp; &nbsp;3</span><br>
+<span style="color: #339933;">#define LUMP_VISIBILITY &nbsp; &nbsp;4</span><br>
+<span style="color: #339933;">#define LUMP_NODES &nbsp; &nbsp; &nbsp; &nbsp; 5</span><br>
+<span style="color: #339933;">#define LUMP_TEXINFO &nbsp; &nbsp; &nbsp; 6</span><br>
+<span style="color: #339933;">#define LUMP_FACES &nbsp; &nbsp; &nbsp; &nbsp; 7</span><br>
+<span style="color: #339933;">#define LUMP_LIGHTING &nbsp; &nbsp; &nbsp;8</span><br>
+<span style="color: #339933;">#define LUMP_CLIPNODES &nbsp; &nbsp; 9</span><br>
+<span style="color: #339933;">#define LUMP_LEAVES &nbsp; &nbsp; &nbsp; 10</span><br>
+<span style="color: #339933;">#define LUMP_MARKSURFACES 11</span><br>
+<span style="color: #339933;">#define LUMP_EDGES &nbsp; &nbsp; &nbsp; &nbsp;12</span><br>
+<span style="color: #339933;">#define LUMP_SURFEDGES &nbsp; &nbsp;13</span><br>
+<span style="color: #339933;">#define LUMP_MODELS &nbsp; &nbsp; &nbsp; 14</span><br>
+<span style="color: #339933;">#define HEADER_LUMPS &nbsp; &nbsp; &nbsp;15</span><br>
+<br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPHEADER<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nVersion<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// Must be 30 for a valid HL BSP file</span><br>
+&nbsp; &nbsp; BSPLUMP lump<span style="color: #009900;">[</span>HEADER_LUMPS<span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Stores the directory of lumps</span><br>
+<span style="color: #009900;">}</span> BSPHEADER<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+The file header begins with an 32bit integer containing the file version
+ of the BSP file (the magic number). This should be 30 for a valid BSP 
+file used by the Half-Life Engine.
+Subseqently, there is an array of entries for the so-called lumps. A 
+lump is more or less a section of the file containing a specific type of
+ data. The lump entries in the file header address these lumps, accessed
+ by the 15 predefined indexes. A lump entry struct is defined as 
+follows:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPLUMP<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nOffset<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// File offset to data</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nLength<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Length of data</span><br>
+<span style="color: #009900;">}</span> BSPLUMP<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+To read the different lumps from the given BSP file, every lump entry 
+file states the beginning of each lump as an offset relativly to the 
+beginning of the file. Additionally, the lump entry also gives the 
+length of the addressed lump in bytes.
+
+The Half-Life BSP compilers also define several constants for the 
+maximum size of each lump, as they use static, global arrays to hold the
+ data. The hlbsp project uses malloc() to allocate the required memory 
+for each lump depending on their actual size.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define MAX_MAP_HULLS &nbsp; &nbsp; &nbsp; &nbsp;4</span><br>
+<br>
+<span style="color: #339933;">#define MAX_MAP_MODELS&nbsp; &nbsp; &nbsp; &nbsp;400</span><br>
+<span style="color: #339933;">#define MAX_MAP_BRUSHES &nbsp; &nbsp; &nbsp;4096</span><br>
+<span style="color: #339933;">#define MAX_MAP_ENTITIES&nbsp; &nbsp; &nbsp;1024</span><br>
+<span style="color: #339933;">#define MAX_MAP_ENTSTRING &nbsp; &nbsp;(128*1024)</span><br>
+<br>
+<span style="color: #339933;">#define MAX_MAP_PLANES&nbsp; &nbsp; &nbsp; &nbsp;32767</span><br>
+<span style="color: #339933;">#define MAX_MAP_NODES &nbsp; &nbsp; &nbsp; &nbsp;32767</span><br>
+<span style="color: #339933;">#define MAX_MAP_CLIPNODES &nbsp; &nbsp;32767</span><br>
+<span style="color: #339933;">#define MAX_MAP_LEAFS &nbsp; &nbsp; &nbsp; &nbsp;8192</span><br>
+<span style="color: #339933;">#define MAX_MAP_VERTS &nbsp; &nbsp; &nbsp; &nbsp;65535</span><br>
+<span style="color: #339933;">#define MAX_MAP_FACES &nbsp; &nbsp; &nbsp; &nbsp;65535</span><br>
+<span style="color: #339933;">#define MAX_MAP_MARKSURFACES 65535</span><br>
+<span style="color: #339933;">#define MAX_MAP_TEXINFO &nbsp; &nbsp; &nbsp;8192</span><br>
+<span style="color: #339933;">#define MAX_MAP_EDGES &nbsp; &nbsp; &nbsp; &nbsp;256000</span><br>
+<span style="color: #339933;">#define MAX_MAP_SURFEDGES &nbsp; &nbsp;512000</span><br>
+<span style="color: #339933;">#define MAX_MAP_TEXTURES&nbsp; &nbsp; &nbsp;512</span><br>
+<span style="color: #339933;">#define MAX_MAP_MIPTEX&nbsp; &nbsp; &nbsp; &nbsp;0x200000</span><br>
+<span style="color: #339933;">#define MAX_MAP_LIGHTING&nbsp; &nbsp; &nbsp;0x200000</span><br>
+<span style="color: #339933;">#define MAX_MAP_VISIBILITY&nbsp; &nbsp;0x200000</span><br>
+<br>
+<span style="color: #339933;">#define MAX_MAP_PORTALS &nbsp; &nbsp; 65536</span><br>
+&nbsp;</div>
+<p>
+The following sections will focus on every lump of the BSP file.
+</p>
+
+<h2><a name="entities">The Entity Lump (LUMP_ENTITIES)</a></h2>
+
+<p>
+The entity lump is basically a pure ASCII text section. It consists of 
+the string representations of all entities, which are copied directly 
+from the input file to the output BSP file by the compiler.
+An entity might look like this:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #009900;">{</span><br>
+<span style="color: #ff0000;">"origin"</span> <span style="color: #ff0000;">"0 0 -64"</span><br>
+<span style="color: #ff0000;">"angles"</span> <span style="color: #ff0000;">"0 0 0"</span><br>
+<span style="color: #ff0000;">"classname"</span> <span style="color: #ff0000;">"info_player_start"</span><br>
+<span style="color: #009900;">}</span><br>
+&nbsp;</div>
+<p>
+Every entity begins and ends with curly brackets. Inbetween there are 
+the attributes of the entity, one in each line, which are pairs of 
+strings enclosed by quotes. The first string is the name of the 
+attribute (the key), the second one its value. The attribute "classname"
+ is mandatory for every entity specifiying its type and therefore, how 
+it is interpreted by the engine.
+</p>
+
+<p>
+The map compilers also define two constants for the maximum length of key and value:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define MAX_KEY &nbsp; &nbsp; 32</span><br>
+<span style="color: #339933;">#define MAX_VALUE &nbsp; 1024</span><br>
+&nbsp;</div>
+<h2><a name="planes">The Planes Lump (LUMP_PLANES)</a></h2>
+
+<p>
+This lump is a simple array of binary data structures:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define PLANE_X 0 &nbsp; &nbsp; // Plane is perpendicular to given axis</span><br>
+<span style="color: #339933;">#define PLANE_Y 1</span><br>
+<span style="color: #339933;">#define PLANE_Z 2</span><br>
+<span style="color: #339933;">#define PLANE_ANYX 3 &nbsp;// Non-axial plane is snapped to the nearest</span><br>
+<span style="color: #339933;">#define PLANE_ANYY 4</span><br>
+<span style="color: #339933;">#define PLANE_ANYZ 5</span><br>
+<br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPPLANE<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; VECTOR3D vNormal<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// The planes normal vector</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">float</span> fDist<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Plane equation is: vNormal * X = fDist</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nType<span style="color: #339933;">;</span> &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Plane type, see #defines</span><br>
+<span style="color: #009900;">}</span> BSPPLANE<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+Each of this structures defines a plane in 3-dimensional space by using the <a href="http://en.wikipedia.org/wiki/Hesse_normal_form">Hesse normal form:</a>
+</p>
+
+<p>
+normal * point - distance = 0
+</p>
+
+<p>
+Where vNormal is the normalized normal vector of the plane and fDist is 
+the distance of the plane to the origin of the coord system. 
+Additionally, the structure also saves an integer describing the 
+orientation of the plane in space. If nType equals PLANE_X, then the 
+normal of the plane will be parallel to the x axis, meaning the plane is
+ perpendicular to the x axis. If nType equals PLANE_ANYX, then the 
+plane's normal is nearer to the x axis then to any other axis. This 
+information is used by the renderer to speed up some computations.
+</p>
+
+<h2><a name="textures">The Texture Lump (LUMP_TEXTURES)</a></h2>
+
+<p>
+The texture lump is somehow a bit more complex then the other lumps, 
+because it is possible to save textures directly within the BSP file 
+instead of storing them in external <a href="http://hlbsp.sourceforge.net/index.php?content=waddef">WAD files</a>. This lump also starts with a small header:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPTEXTUREHEADER<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> nMipTextures<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Number of BSPMIPTEX structures</span><br>
+<span style="color: #009900;">}</span> BSPTEXTUREHEADER<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+The header only consists of an unsigned 32bit integer indicating the 
+number of stored or referenced textures in the texture lump. After the 
+header follows an array of 32bit offsets pointing to the beginnings of 
+the seperate textures.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">int32_t</span> BSPMIPTEXOFFSET<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+Every offset gives the distance in bytes from the beginning of the 
+texture lump to one of the beginnings of the BSPMIPTEX structure, which 
+are equal in count to the value given in the texture header.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define MAXTEXTURENAME 16</span><br>
+<span style="color: #339933;">#define MIPLEVELS 4</span><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPMIPTEX<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">char</span> szName<span style="color: #009900;">[</span>MAXTEXTURENAME<span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp;<span style="color: #666666; font-style: italic;">// Name of texture</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> nWidth<span style="color: #339933;">,</span> nHeight<span style="color: #339933;">;</span> &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// Extends of the texture</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> nOffsets<span style="color: #009900;">[</span>MIPLEVELS<span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Offsets to texture mipmaps BSPMIPTEX;</span><br>
+<span style="color: #009900;">}</span> BSPMIPTEX<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+Each of this structs describes a texture.
+The name of the texture is a string and may be 16 characters long 
+(including the null-character at the end, char equals a 8bit signed 
+integer).
+The name of the texture is needed, if the texture has to be found and 
+loaded from an external WAD file. Furthermore, the struct contains the 
+width and height of the texture.
+The 4 offsets at the end can either be zero, if the texture is stored in
+ an external WAD file, or point to the beginnings of the binary texture 
+data within the texture lump relative to the beginning of it's BSPMIPTEX
+ struct.
+</p>
+
+<h2><a name="vertices">The Vertices Lump (LUMP_VERTICES)</a></h2>
+
+<p>
+This lump simply consists of all vertices of the BSP tree. They are stored as a primitve array of triples of floats.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> VECTOR3D BSPVERTEX<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+Each of this triples, obviously, represents a point in 3-dimensional space by giving its three coordinates.
+</p>
+
+<h2><a name="vis">The VIS Lump (LUMP_VISIBILITY)</a></h2>
+
+<p>
+The VIS lump contains data, which is irrelevant to the actual BSP tree, 
+but offers a way to boost up the speed of the renderer significantly. 
+Especially complex maps profit from the use if this data. This lump 
+contains the so-called Potentially Visible Sets (PVS) (also called VIS 
+lists) in the same amout of leaves of the tree, the user can enter 
+(often referred to as VisLeaves). The visiblilty lists are stored as 
+sequences of bitfields, which are run-length encoded.<br>
+<b>Important:</b> The generation of the VIS data is a very time 
+consuming process (several hours) and also done by a seperate compiler. 
+It can therefore be skipped when compiling the map, resulting in BSP 
+files with no VIS data at all!
+</p>
+
+<h2><a name="nodes">The Nodes Lump (LUMP_NODES)</a></h2>
+
+<p>
+This lump is simple again and contains an array of binary structures, the nodes, which are a major part of the BSP tree.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPNODE<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> iPlane<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Index into Planes lump</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int16_t</span> iChildren<span style="color: #009900;">[</span><span style="color: #0000dd;">2</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// If &gt; 0, then indices into Nodes // otherwise bitwise inverse indices into Leafs</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int16_t</span> nMins<span style="color: #009900;">[</span><span style="color: #0000dd;">3</span><span style="color: #009900;">]</span><span style="color: #339933;">,</span> nMaxs<span style="color: #009900;">[</span><span style="color: #0000dd;">3</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Defines bounding box</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint16_t</span> firstFace<span style="color: #339933;">,</span> nFaces<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Index and count into Faces</span><br>
+<span style="color: #009900;">}</span> BSPNODE<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+Every BSPNODE structure represents a node in the BSP tree and every node
+ equals more or less a division step of the BSP algorithm. Therefore, 
+each node has an index (iPlane) referring to a plane in the plane lump 
+which devides the node into its two child nodes. The childnodes are also
+ stored as indexes. Contrary to the plane index, the node index for the 
+child is signed. If the index is larger than 0, the index indicates a 
+child node. If it is equal to or smaller than zero (no valid array 
+index), the bitwise inversed value of the index gives an index into the 
+leaves lump. Additionally two points (nMins, nMaxs) span the bounding 
+box (AABB, axis aligned bounding box) delimitting the space of the node.
+ Finally firstFace indexes into the face lump and spezifies the first of
+ nFaces surfaces contained in this node.
+</p>
+
+<h2><a name="texinfo">The Texinfo Lump (LUMP_TEXINFO)</a></h2>
+
+<p>
+The texinfo lump contains informations about how textures are applied to
+ surfaces. The lump itself is an array of binary data structures.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPTEXTUREINFO<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; VECTOR3D vS<span style="color: #339933;">;</span> <br>
+&nbsp; &nbsp; <span style="color: #993333;">float</span> fSShift<span style="color: #339933;">;</span> &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Texture shift in s direction</span><br>
+&nbsp; &nbsp; VECTOR3D vT<span style="color: #339933;">;</span> <br>
+&nbsp; &nbsp; <span style="color: #993333;">float</span> fTShift<span style="color: #339933;">;</span> &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Texture shift in t direction</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> iMiptex<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Index into textures array</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> nFlags<span style="color: #339933;">;</span> &nbsp;<span style="color: #666666; font-style: italic;">// Texture flags, seem to always be 0</span><br>
+<span style="color: #009900;">}</span> BSPTEXTUREINFO<span style="color: #339933;">;</span><br>
+&nbsp;</div><p>
+This struct is mainly responsible for the calculation of the texture 
+coordinates (vS, fSShift, vT, fTShift). This values determine the 
+position of the texture on the surface. The iMiptex integer refers to 
+the textures in the texture lump and would be the index in an array of 
+BSPMITEX structs. Finally, there are 4 Bytes used for flags. Somehow 
+they seem to always be 0;
+</p>
+
+<h2><a name="faces">The Faces Lump (LUMP_FACES)</a></h2>
+
+<p>
+The face lump contains the surfaces of the scene. Once again an array of structs:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPFACE<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint16_t</span> iPlane<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Plane the face is parallel to</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint16_t</span> nPlaneSide<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Set if different normals orientation</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> iFirstEdge<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Index of the first surfedge</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint16_t</span> nEdges<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Number of consecutive surfedges</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint16_t</span> iTextureInfo<span style="color: #339933;">;</span> &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Index of the texture info structure</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint8_t</span> nStyles<span style="color: #009900;">[</span><span style="color: #0000dd;">4</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// Specify lighting styles</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> nLightmapOffset<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Offsets into the raw lightmap data</span><br>
+<span style="color: #009900;">}</span> BSPFACE<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+The first number of this data structure is an index into the planes lump
+ giving a plane which is parallel to this face (meaning they share the 
+same normal). The second value may be seen as a boolean. If nPlaneSide 
+equals 0, then the normal vector of this face equals the one of the 
+parallel plane exactly. Otherwise, the normal of the plane has to be 
+multiplied by -1 to point into the right direction. Afterwards we have 
+an index into the surfedges lump, as well as the count of consecutive 
+surfedges from that position. Furthermore there is an index into the 
+texture info lump, which is used to find the BSPTEXINFO structure needed
+ to calculate the texture coordinates for this face. Afterwards, there 
+are four bytes giving some lighting information (partly used by the 
+renderer to hide sky surfaces). Finally we have an offset in byes giving
+ the beginning of the binary lightmap data of this face in the lighting 
+lump.
+</p>
+
+<h2><a name="lightmaps">The Lightmap Lump (LUMP_LIGHTING)</a></h2>
+
+<p>
+This is one of the largest lumps in the BSP file. The lightmap lump 
+stores all lightmaps used in the entire map. The lightmaps are arrays of
+ triples of bytes (3 channel color, RGB) and stored continuously.
+</p>
+
+<h2><a name="clipnodes">The Clipnodes Lump (LUMP_CLIPNODES)</a></h2>
+
+<p>
+This lump contains the so-called clipnodes, which build a second BSP tree used only for collision detection.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPCLIPNODE<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> iPlane<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// Index into planes</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int16_t</span> iChildren<span style="color: #009900;">[</span><span style="color: #0000dd;">2</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// negative numbers are contents</span><br>
+<span style="color: #009900;">}</span> BSPCLIPNODE<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+This structure is a reduced form of the BSPNODE struct from the nodes 
+lump. Also the BSP tree built by the clipnodes is simpler than the one 
+described by the BSPNODEs to accelerate collision calculations.
+</p>
+
+<h2><a name="leaves">The Leaves Lump (LUMP_LEAVES)</a></h2>
+
+<p>
+The leaves lump contains the leaves of the BSP tree. Another array of binary structs:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define CONTENTS_EMPTY &nbsp; &nbsp; &nbsp; &nbsp;-1</span><br>
+<span style="color: #339933;">#define CONTENTS_SOLID &nbsp; &nbsp; &nbsp; &nbsp;-2</span><br>
+<span style="color: #339933;">#define CONTENTS_WATER &nbsp; &nbsp; &nbsp; &nbsp;-3</span><br>
+<span style="color: #339933;">#define CONTENTS_SLIME &nbsp; &nbsp; &nbsp; &nbsp;-4</span><br>
+<span style="color: #339933;">#define CONTENTS_LAVA &nbsp; &nbsp; &nbsp; &nbsp; -5</span><br>
+<span style="color: #339933;">#define CONTENTS_SKY &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;-6</span><br>
+<span style="color: #339933;">#define CONTENTS_ORIGIN &nbsp; &nbsp; &nbsp; -7</span><br>
+<span style="color: #339933;">#define CONTENTS_CLIP &nbsp; &nbsp; &nbsp; &nbsp; -8</span><br>
+<span style="color: #339933;">#define CONTENTS_CURRENT_0 &nbsp; &nbsp;-9</span><br>
+<span style="color: #339933;">#define CONTENTS_CURRENT_90 &nbsp; -10</span><br>
+<span style="color: #339933;">#define CONTENTS_CURRENT_180 &nbsp;-11</span><br>
+<span style="color: #339933;">#define CONTENTS_CURRENT_270 &nbsp;-12</span><br>
+<span style="color: #339933;">#define CONTENTS_CURRENT_UP &nbsp; -13</span><br>
+<span style="color: #339933;">#define CONTENTS_CURRENT_DOWN -14</span><br>
+<span style="color: #339933;">#define CONTENTS_TRANSLUCENT &nbsp;-15</span><br>
+<br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPLEAF<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nContents<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// Contents enumeration</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nVisOffset<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Offset into the visibility lump</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int16_t</span> nMins<span style="color: #009900;">[</span><span style="color: #0000dd;">3</span><span style="color: #009900;">]</span><span style="color: #339933;">,</span> nMaxs<span style="color: #009900;">[</span><span style="color: #0000dd;">3</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Defines bounding box</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint16_t</span> iFirstMarkSurface<span style="color: #339933;">,</span> nMarkSurfaces<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Index and count into marksurfaces array</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint8_t</span> nAmbientLevels<span style="color: #009900;">[</span><span style="color: #0000dd;">4</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// Ambient sound levels</span><br>
+<span style="color: #009900;">}</span> BSPLEAF<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+The first entry of this struct is the type of the content of this leaf. 
+It can be one of the predefined values, found in the compiler source 
+codes, and is litte relevant for the actual rendering process. All the 
+more important is the next integer containing the offset into the vis 
+lump. It defines the start of the raw PVS data for this leaf. If this 
+value equals -1, no VIS lists are available for this leaf, usually if 
+the map has been built without the VIS compiler. The next two 16bit 
+integer triples span the bounding box of this leaf. Furthermore, the 
+struct contains an index pointing into the array of marksurfaces loaded 
+from the marksufaces lump as well as the number of consecutive 
+marksurfaces belonging to this leaf. The marksurfaces are looped through
+ during the rendering process and point to the actual faces. The final 4
+ bytes somehow spezify the volume of the ambient sounds.
+</p>
+
+<h2><a name="marksurfaces">The Marksurfaces Lump (LUMP_MARKSURFACES)</a></h2>
+
+<p>
+The marksurfaces lump is a simple array of short integers.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">uint16_t</span> BSPMARKSURFACE<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+This lump is a simple table for redirecting the marksurfaces indexes in 
+the leafs to the actial face indexes. A leaf inserts it's marksurface 
+indexes into this array and gets the associated faces contained within 
+this leaf.
+</p>
+
+<h2><a name="edges">The Edges Lump (LUMP_EDGES)</a></h2>
+
+<p>
+The edges are defined as an array of structs:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPEDGE<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint16_t</span> iVertex<span style="color: #009900;">[</span><span style="color: #0000dd;">2</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Indices into vertex array</span><br>
+<span style="color: #009900;">}</span> BSPEDGE<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+The edges delimit the face and further refer to the vertices of the 
+face. Each edge is pointing to the start and end vertex of the edge.
+</p>
+
+<h2><a name="surfedges">The Surfedges Lump (LUMP_SURFEDGES)</a></h2>
+
+<p>
+Another array of integers.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">int32_t</span> BSPSURFEDGE<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+This lump represents pretty much the same mechanism as the marksurfaces.
+ A face can insert its surfedge indexes into this array to get the 
+corresponding edges delimitting the face and further pointing to the 
+vertexes, which are required for rendering. The index can be positive or
+ negative. If the value of the surfedge is positive, the first vertex of
+ the edge is used as vertex for rendering the face, otherwise, the value
+ is multiplied by -1 and the second vertex of the indexed edge is used.
+</p>
+
+<h2><a name="models">The Models Lump (LUMP_MODELS)</a></h2>
+
+<p>
+Array of structs:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define MAX_MAP_HULLS 4</span><br>
+<br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPMODEL<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">float</span> nMins<span style="color: #009900;">[</span><span style="color: #0000dd;">3</span><span style="color: #009900;">]</span><span style="color: #339933;">,</span> nMaxs<span style="color: #009900;">[</span><span style="color: #0000dd;">3</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Defines bounding box</span><br>
+&nbsp; &nbsp; VECTOR3D vOrigin<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Coordinates to move the // coordinate system</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> iHeadnodes<span style="color: #009900;">[</span>MAX_MAP_HULLS<span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Index into nodes array</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nVisLeafs<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// ???</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> iFirstFace<span style="color: #339933;">,</span> nFaces<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// Index and count into faces</span><br>
+<span style="color: #009900;">}</span> BSPMODEL<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+A model is kind of a mini BSP tree. Its size is determinded by the 
+bounding box spaned by the first to members of this struct. The major 
+difference between a model and the BSP tree holding the scene is that 
+the models use a local coordinate system for their vertexes and just 
+state its origin in world coordinates. During rendering the coordinate 
+system is translated to the origin of the model (glTranslate()) and 
+moved back after the models BSP tree has been traversed. Furthermore 
+their are 4 indexes into node arrays. The first one has proofed to index
+ the root node of the mini BSP tree used for rendering. The other three 
+indexes could probably be used for collision detection, meaning they 
+point into the clipnodes, but I am not sure about this. The meaning of 
+the next value is also somehow unclear to me. Finally their are direct 
+indexes into the faces array, not taking the redirecting by the 
+marksurfaces.
+</p>
+</div>		
+		<div id="footer"></div>
+	
+</body></html>

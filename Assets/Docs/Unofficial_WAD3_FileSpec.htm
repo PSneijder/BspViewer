@@ -1,0 +1,155 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+		<meta name="description" content="SourceForge page of the hlbsp project. hlbsp is an open source application. It is an attempt to create a freely available cross platform renderer for the BSP file format of the GoldSrc Engine used by Valve to power HalfLife and its mods.">
+		<meta name="keywords" content="Open Source, Software, Development, Developers, Projects, Downloads, SF.net, SourceForge, English, 3D, 3D engine, engine, SDL, 64-bit MS Windows, 32-bit MS Windows (NT/2000/XP), Linux, GLSL (OpenGL Shading Language), C++, C, 3D Rendering, Data Formats, First Person Shooters, 2 - Pre-Alpha, GNU Library or Lesser General Public License (LGPL), Developers, hlbsp, hlbsp, BSP, binary space partitioning, halflife, Half-Life">
+					   
+		<title>The hlbsp Project</title>
+	</head>
+	<body>
+		<div id="header"> </div>
+		
+		<div id="menu"><ul>
+	<li><a href="http://hlbsp.sourceforge.net/index.php?content=home">Home</a></li>
+	<li><a href="http://hlbsp.sourceforge.net/index.php?content=bspdef">Unofficial BSP v30 File Spec</a></li>
+	<li><a href="http://hlbsp.sourceforge.net/index.php?content=waddef">Unofficial WAD3 File Spec</a></li>
+</ul></div><div id="content">
+<h1>Unofficial WAD3 File Spec</h1>
+
+<h2>Table of content</h2>
+<ol>
+	<li><a href="#intro">Introduction</a></li>
+	<li><a href="#header">Header</a></li>
+	<li><a href="#entries">Directory entries</a></li>
+	<li><a href="#textures">Files in a WAD File - Textures</a></li>
+</ol>
+
+<h2><a name="intro">Introduction</a></h2>
+
+<p>
+The following file specification concerns the WAD3 file format used 
+Valve's famous GoldSrc Engine. The file extension is ".wad".
+Contrary to the BSP v30 file format that has been derived from the Quake
+ 1 BSP (v29) format, the WAD3 format is tecnically fully compatible with
+ Quake's WAD2 files.
+WAD files are used to store game related files in some kind of archive. 
+Somehow they seem to contain only textures, although they are capable of
+ holding different kinds of data.
+</p>
+
+<p>
+This file spec uses constructs from the C programming language to 
+describe the different data structures used in the WAD file format.
+Architecture dependent datatypes like integers are replaced by 
+exact-width integer types of the C99 standard in the stdint.h header 
+file, to provide more flexibillity when using x64 platforms.
+Basic knowledge about <a href="http://hlbsp.sourceforge.net/index.php?content=bspdef">textures in the BSP file</a> is recommended.
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#include &lt;stdint.h&gt;</span><br>
+&nbsp;</div>
+<h2><a name="header">Header</a></h2>
+
+<p>
+Like almost every file also a WAD file (WAD3) starts with a specific file header which is constucted as follows:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _WADHEADER<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">char</span> szMagic<span style="color: #009900;">[</span><span style="color: #0000dd;">4</span><span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// should be WAD2/WAD3</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nDir<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// number of directory entries</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nDirOffset<span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// offset into directory</span><br>
+<span style="color: #009900;">}</span> WADHEADER<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+The first 4 bytes of a WAD archive identify the file (the so-called 
+magic number) with the 3 character string "WAD" followed by a version 
+numer as ASCII char. Compatible formats include "WAD3" as well as 
+"WAD2". 
+As with the BSP file also a WAD file starts with some kind of directory 
+containing entries similar to the lumps of the BSP file.
+The major difference is that a WAD file may have an arbitrary number of 
+entries. This value is stored in the nDir member of the header followed 
+by the offset to the array of directory entries within the file, which 
+is usually located somewhere at the ned of the WAD file.
+</p>
+
+<h2><a name="entries">Directory entries</a></h2>
+
+<p>
+The directory of a WAD file is basically an array of structures. Every archived file has an associated entry in this directory:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define MAXTEXTURENAME 16</span><br>
+<br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _WADDIRENTRY<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nFilePos<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// offset in WAD</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nDiskSize<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// size in file</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int32_t</span> nSize<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// uncompressed size</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int8_t</span> nType<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// type of entry</span><br>
+&nbsp; &nbsp; bool bCompression<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// 0 if none</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">int16_t</span> nDummy<span style="color: #339933;">;</span> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span style="color: #666666; font-style: italic;">// not used</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">char</span> szName<span style="color: #009900;">[</span>MAXTEXTURENAME<span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// must be null terminated</span><br>
+<span style="color: #009900;">}</span> WADDIRENTRY<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+The first value is the offset of the raw data of the archived file 
+within the WAD file followed by the size of data used by the it in its 
+current form.
+Additionally nSize stores the size of original file, if it has been 
+compressed. This is indicated by the bCompression boolean value. If it 
+is false, no compression is used which is mostly the case.
+The nType member would give as information about the type of file, that 
+is associated with this entry. As WAD files usually contain only 
+textures, this information may be ignored.
+The nDummy short integer is not used when loading textures and i have 
+not found any information about this member.
+Finally the entry contains a name for the file which can be a string of 
+maximum 16 chars including the zero termination. In case of textures, 
+this is the name referred by the BSPMIPTEX structs of the BSP file.
+</p>
+
+<h2><a name="textures">Files in a WAD File - Textures</a></h2>
+
+<p> 
+The actual files in the WAD archive, the textures, also start with a file header which may look familiar:
+</p>
+
+<div class="c" style="font-family:monospace;"><br>
+<span style="color: #339933;">#define MAXTEXTURENAME 16</span><br>
+<span style="color: #339933;">#define MIPLEVELS 4</span><br>
+<span style="color: #993333;">typedef</span> <span style="color: #993333;">struct</span> _BSPMIPTEX<br>
+<span style="color: #009900;">{</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">char</span> szName<span style="color: #009900;">[</span>MAXTEXTURENAME<span style="color: #009900;">]</span><span style="color: #339933;">;</span> &nbsp;<span style="color: #666666; font-style: italic;">// Name of texture</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> nWidth<span style="color: #339933;">,</span> nHeight<span style="color: #339933;">;</span> &nbsp; &nbsp; <span style="color: #666666; font-style: italic;">// Extends of the texture</span><br>
+&nbsp; &nbsp; <span style="color: #993333;">uint32_t</span> nOffsets<span style="color: #009900;">[</span>MIPLEVELS<span style="color: #009900;">]</span><span style="color: #339933;">;</span> <span style="color: #666666; font-style: italic;">// Offsets to texture mipmaps BSPMIPTEX;</span><br>
+<span style="color: #009900;">}</span> BSPMIPTEX<span style="color: #339933;">;</span><br>
+&nbsp;</div>
+<p>
+This struct equals the one of the BSP file exactly.
+The name of the texture as not needed actually, as it equals the file 
+name in the directory entry.
+The next members are of particular interest. They give the size of the 
+texture in pixel as well as the offsets into the raw texture data.
+The first value of the offset array points to the beginning of the 
+original texture relativly to the local header (the BSPMIPTEX struct).
+From this point follows a nWidth * nHeight bytes long array of indexes 
+(0-255) pointing to colors in a color table.
+The other three offsets are used the same way, but with the diference 
+that the width and height of the image are cut in half with every 
+further offset.
+These represent the so-called <a href="http://en.wikipedia.org/wiki/Mipmap">mipmap</a>
+ levels of the original image.
+After the last byte of the fourth mipmap there are two dummy bytes 
+followed by the actual color table consisting of an array of triples of 
+bytes (RGB values) with 256 elements.
+The indexes of the image are plugged into the color table array to 
+receive the corresponding RGB color value for the pixel.
+</p></div>		
+		<div id="footer"></div>
+	
+</body></html>
