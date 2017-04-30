@@ -3,6 +3,7 @@ using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 
 namespace BspViewer
 {
@@ -18,11 +19,11 @@ namespace BspViewer
         private FaceBuffer[] _faceBufferRegions;
 
         private int _vertexBuffer;
-
-        public Renderer(BspMap map)
+        
+        public Renderer(BspMap map, BspTextureData[] textures)
             : base(map)
         {
-            PreRender();
+            PreRender(textures);
         }
 
         public void Render(Vector3 position)
@@ -34,74 +35,7 @@ namespace BspViewer
 
             GL.Disable(EnableCap.DepthTest);
         }
-
-        protected override void PreRender()
-        {
-            var vertexList = new List<Vector3>();
-            var normalList = new List<float>();
-
-            _faceBufferRegions = new FaceBuffer[Map.Faces.Length];
-            var elements = 0;
-
-            // for each face
-            for (var i = 0; i < Map.Faces.Length; i++)
-            {
-                var face = Map.Faces[i];
-
-                _faceBufferRegions[i] = new FaceBuffer
-                {
-                    Start = elements,
-                    Count = face.NumEdges
-                };
-
-                var texInfo = Map.TextureInfos[face.TextureInfo];
-                var plane = Map.Planes[face.PlaneId];
-
-                var normal = plane.Normal;
-
-                for (var j = 0; j < face.NumEdges; j++)
-                {
-                    var edgeIndex = Map.SurfEdges[face.FirstEdge + j]; // This gives the index into the edge lump
-
-                    int vertexIndex;
-                    if (edgeIndex > 0)
-                    {
-                        var edge = Map.Edges[edgeIndex];
-                        vertexIndex = edge.Vertices[0];
-                    }
-                    else
-                    {
-                        edgeIndex *= -1;
-                        var edge = Map.Edges[edgeIndex];
-                        vertexIndex = edge.Vertices[1];
-                    }
-
-                    var vertex = Map.Vertices[vertexIndex].Point;
-
-                    // Write to buffers
-                    //vertexList.Add(vertex[0]);
-                    //vertexList.Add(vertex[1]);
-                    //vertexList.Add(vertex[2]);
-                    vertexList.Add(new Vector3(vertex[0], vertex[1], vertex[2]));
-
-                    normalList.Add(normal[0]);
-                    normalList.Add(normal[1]);
-                    normalList.Add(normal[2]);
-
-                    elements += 1;
-                }
-            }
-
-            var vertices = vertexList.ToArray();
-            var normals = normalList.ToArray();
-
-            // Create all buffers
-
-            _vertexBuffer = GL.GenBuffer();
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
-            GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(vertices.Length * BlittableValueType.StrideOf(vertices)), vertices, BufferUsageHint.StaticDraw);
-        }
-
+        
         protected override void RenderFace(int faceIndex)
         {
             var face = Map.Faces[faceIndex];
@@ -228,5 +162,82 @@ namespace BspViewer
         }
 
         #endregion
+
+        private void PreRender(BspTextureData[] textures)
+        {
+            var vertexList = new List<Vector3>();
+            var normalList = new List<float>();
+
+            _faceBufferRegions = new FaceBuffer[Map.Faces.Length];
+            var elements = 0;
+
+            // for each face
+            for (var i = 0; i < Map.Faces.Length; i++)
+            {
+                var face = Map.Faces[i];
+
+                _faceBufferRegions[i] = new FaceBuffer
+                {
+                    Start = elements,
+                    Count = face.NumEdges
+                };
+
+                var texInfo = Map.TextureInfos[face.TextureInfo];
+                var plane = Map.Planes[face.PlaneId];
+
+                var normal = plane.Normal;
+
+                for (var j = 0; j < face.NumEdges; j++)
+                {
+                    var edgeIndex = Map.SurfEdges[face.FirstEdge + j]; // This gives the index into the edge lump
+
+                    int vertexIndex;
+                    if (edgeIndex > 0)
+                    {
+                        var edge = Map.Edges[edgeIndex];
+                        vertexIndex = edge.Vertices[0];
+                    }
+                    else
+                    {
+                        edgeIndex *= -1;
+                        var edge = Map.Edges[edgeIndex];
+                        vertexIndex = edge.Vertices[1];
+                    }
+
+                    var vertex = Map.Vertices[vertexIndex].Point;
+
+                    // Write to buffers
+                    //vertexList.Add(vertex[0]);
+                    //vertexList.Add(vertex[1]);
+                    //vertexList.Add(vertex[2]);
+                    vertexList.Add(new Vector3(vertex[0], vertex[1], vertex[2]));
+
+                    normalList.Add(normal[0]);
+                    normalList.Add(normal[1]);
+                    normalList.Add(normal[2]);
+
+                    elements += 1;
+                }
+            }
+
+            var vertices = vertexList.ToArray();
+            var normals = normalList.ToArray();
+
+            // Create all buffers
+
+            _vertexBuffer = GL.GenBuffer();
+            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
+            GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(vertices.Length * BlittableValueType.StrideOf(vertices)), vertices, BufferUsageHint.StaticDraw);
+
+            // Create all textures
+
+            foreach (var textureData in textures)
+            {
+                int texture = GL.GenTexture();
+                GL.BindTexture(TextureTarget.Texture2D, texture);
+                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, textureData.Width, textureData.Height, 0, PixelFormat.Rgba, PixelType.Float, textureData.TextureData);
+                GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+            }
+        }
     }
 }

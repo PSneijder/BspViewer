@@ -148,4 +148,21 @@ namespace BspViewer
         public float Y { get; set; }
         public float Z { get; set; }
     }
+
+    public struct BspTextureData
+    {
+        public BspTextureData(float[] textureData, int width, int height, string name)
+            : this()
+        {
+            TextureData = textureData;
+            Width = width;
+            Height = height;
+            Name = name;
+        }
+
+        public float[] TextureData { get; private set; }
+        public int Width { get; private set; }
+        public int Height { get; private set; }
+        public string Name { get; private set; }
+    }
 }

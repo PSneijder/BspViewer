@@ -102,7 +102,7 @@ namespace BspViewer
 
             for (int i = 0; i < numberOfTextures; i++)
             {
-                mipTexturesOffsets[i] = (entitiesLump.Offset + reader.ReadInt32());
+                mipTexturesOffsets[i] = reader.ReadInt32();
             }
 
             return new BspTextureHeader { NumberMipTextures = numberOfTextures, Offsets = mipTexturesOffsets };

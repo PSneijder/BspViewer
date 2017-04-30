@@ -27,25 +27,26 @@ namespace BspViewer
             base.OnLoad(e);
 
             //var fileName = @"C:\Sierra\Half-Life\valve\maps\hldemo1.bsp";
-            //var fileNames = new string[] { @"C:\Sierra\Half-Life\valve\halflife.wad" };
-            var fileName = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Assets\Maps\", "SampleMap.bsp"));
-            var wadPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Assets\Wads\", "SampleWad.wad"));
+            //var wadFileNames = new string[] { @"C:\Sierra\Half-Life\valve\halflife.wad" };
 
-            var fileNames = new string[] { Path.Combine(wadPath, "") };
+            var wadPath = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Assets\Wads\", "SampleWad.wad"));
+            var fileName = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\..\..\Assets\Maps\", "SampleMap.bsp"));
+            var wadFileNames = new string[] { Path.Combine(wadPath) };
+
             var loader = new BspLoader(fileName);
             var map = loader.Load();
 
-            var wadLoader = new WadLoader(map, fileName, fileNames);
-            wadLoader.Load();
+            var wadLoader = new WadLoader(map, fileName, wadFileNames);
+            var textures = wadLoader.Load();
 
-            _renderer = new Renderer(map);
+            _renderer = new Renderer(map, textures);
             _camera = new Camera(this);
 
             float[] origin = map.Entities["info_player_start"]["origin"].AsSingleArray();
             _camera.SetPosition(origin[0], origin[1], origin[2]);
 
-            //float[] angles = map.Entities["info_player_start"]["angles"].AsSingleArray();
-            //_camera.SetViewAngles(angles[0], angles[1]);
+            float[] angles = map.Entities["info_player_start"]["angles"].AsSingleArray();
+            _camera.SetViewAngles(angles[0], angles[1]);
 
             InitGL();
         }

@@ -14,15 +14,8 @@ namespace BspViewer
         protected BspRenderer(BspMap map)
         {
             Map = map;
-
-            PreRender();
         }
         
-        protected virtual void PreRender()
-        {
-            
-        }
-
         #region BSP Traversal
 
         protected int TraverseTree(BspVector position, int nodeIndex)
@@ -138,21 +131,7 @@ namespace BspViewer
                 RenderFace(Map.MarkSurfaces[leaf.FirstMarkSurface + i]);
         }
 
-        protected virtual void RenderFace(int faceIndex)
-        {
-            var face = Map.Faces[faceIndex];
-            //var texInfo = _map.TextureInfos[face.textureInfo];
-
-            if (Map.Faces[faceIndex].Styles[0] == 0xFF) // Skip sky faces
-                return;
-
-            // if the light map offset is not -1 and the lightmap lump is not empty, there are lightmaps
-            bool lightmapAvailable = face.LightmapOffset != -1 && Map.Header.Lumps[BspDefs.LUMP_LIGHTING].Length > 0;
-
-            //GL.DrawArrays(BeginMode.TriangleFan, _faceBufferRegions[faceIndex].Start, _faceBufferRegions[faceIndex].Count);
-
-            var color = Map.FaceColors[faceIndex];
-        }
+        protected abstract void RenderFace(int faceIndex);
 
         protected float DotProduct(BspVector v1, BspVector v2)
         {

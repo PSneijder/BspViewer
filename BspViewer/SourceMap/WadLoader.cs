@@ -16,27 +16,27 @@ namespace BspViewer
     {
         private BspMap _map;
         private string _mapFileName;
-        private string[] _fileNames;
-
-        private int[] _textureLookup; // ToDo
-
+        private string[] _wadFileNames;
+        
         private WadHeader _header;
+
+        private BspTextureData[] _textureLookup;
         private List<MissingTexture> _missingTextures;
 
-        public WadLoader(BspMap map, string mapFileName, string[] fileNames)
+        public WadLoader(BspMap map, string mapFileName, string[] wadFileNames)
         {
             _map = map;
 
             _mapFileName = mapFileName;
 
-            _fileNames = fileNames;
+            _wadFileNames = wadFileNames;
         }
 
-        public void Load()
+        public BspTextureData[] Load()
         {
             using (var mapReader = new BinaryReader(new FileStream(_mapFileName, FileMode.Open)))
             {
-                foreach (var fileName in _fileNames)
+                foreach (var fileName in _wadFileNames)
                 {
                     if (!File.Exists(fileName))
                     {
@@ -51,6 +51,8 @@ namespace BspViewer
                     LoadTextures(mapReader);
                 }
             }
+
+            return _textureLookup;
         }
 
         private WadHeader ReadHeader(BinaryReader reader)
@@ -117,11 +119,11 @@ namespace BspViewer
                 textureCoordinates.AddRange(faceCoords);
             }
 
-            var whiteTexture = -1; // ToDo
+            var whiteTexture = new BspTextureData(); // ToDo
 
             // Texture images
 
-            _textureLookup = new int[_map.Faces.Length];
+            _textureLookup = new BspTextureData[_map.Faces.Length];
             _missingTextures = new List<MissingTexture>();
 
             for (var i = 0; i < _map.MipTextures.Length; i++)
@@ -135,7 +137,7 @@ namespace BspViewer
                     // search texture in loaded wads
                     var texture = LoadTextureFromWad(mipTexture.Name);
 
-                    if (texture != null)
+                    if (texture.TextureData != null)
                     {
                         // the texture has been found in a loaded wad
                         _textureLookup[i] = texture;
@@ -161,7 +163,8 @@ namespace BspViewer
                     // Load internal texture if present
 
                     // Calculate offset of the texture in the bsp file
-                    var offset = _map.TextureHeader.Offsets[i];
+                    //var offset = _map.TextureHeader.Offsets[i];
+                    var offset = _map.Header.Lumps[BspDefs.LUMP_TEXTURES].Offset + _map.TextureHeader.Offsets[i];
 
                     _textureLookup[i] = FetchTextureAtOffset(mapReader, offset);
 
@@ -170,7 +173,7 @@ namespace BspViewer
             }
         }
 
-        private int FetchTextureAtOffset(BinaryReader mapReader, long offset)
+        private BspTextureData FetchTextureAtOffset(BinaryReader mapReader, long offset)
         {
             // Seek to the texture beginning
             mapReader.BaseStream.Seek(offset, SeekOrigin.Begin);
@@ -217,12 +220,12 @@ namespace BspViewer
                 ApplyAlphaSections(ref textureData, width, height, palette[255 * 3 + 0], palette[255 * 3 + 1], palette[255 * 3 + 2]);
             }
 
-            return -1; // ToDo
+            return new BspTextureData(textureData, width, height, mipTex.Name);
         }
 
-        private int LoadTextureFromWad(string name)
+        private BspTextureData LoadTextureFromWad(string name)
         {
-            return -1; // ToDo
+            return new BspTextureData(); // ToDo
         }
 
         private void ApplyAlphaSections(ref float[] pixels, int width, int height, uint keyR, uint keyG, uint keyB)
