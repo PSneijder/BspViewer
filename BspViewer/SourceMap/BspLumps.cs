@@ -52,7 +52,7 @@ namespace BspViewer
     {
         public static readonly int SizeInBytes = 4;
 
-        public ushort[] Vertex { get; set; } // Indices into vertex array
+        public ushort[] Vertices { get; set; } // Indices into vertex array
     }
 
     public struct BspLeaf
@@ -126,6 +126,12 @@ namespace BspViewer
         public float TShift { get; set; } // Texture shift in t direction
         public uint MipTex { get; set; } // Index into textures array
         public uint Flags { get; set; } // Texture flags, seem to always be 0
+    }
+
+    public struct BspTextureHeader
+    {
+        public int NumberMipTextures { get; set; }
+        public int[] Offsets { get; set; }
     }
 
     public struct BspVector

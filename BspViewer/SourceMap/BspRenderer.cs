@@ -1,6 +1,12 @@
 ﻿
 namespace BspViewer
 {
+    struct FaceCoord
+    {
+        public float Vec3s { get; set; }
+        public float Vec3t { get; set; }
+    }
+
     public abstract class BspRenderer
     {
         protected BspMap Map { get; private set; }
@@ -148,7 +154,7 @@ namespace BspViewer
             var color = Map.FaceColors[faceIndex];
         }
 
-        private float DotProduct(BspVector v1, BspVector v2)
+        protected float DotProduct(BspVector v1, BspVector v2)
         {
             return (v1.X * v2.X) + (v1.Y * v2.Y) + (v1.Z * v2.Z);
         }

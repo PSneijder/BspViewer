@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Drawing;
 
-namespace HalfLife.Sharp.Utils
+namespace BspViewer
 {
     public static class ColorUtils
     {

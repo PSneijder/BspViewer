@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Globalization;
 
-namespace HalfLife.Sharp.Extensions
+namespace BspViewer.Extensions
 {
     public static class StringExtensions
     {

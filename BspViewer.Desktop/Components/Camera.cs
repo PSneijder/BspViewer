@@ -103,7 +103,7 @@ namespace BspViewer
             if (_keyboard[Key.W]) // W - FORWARD
             {
                 newPos.X += (float) Math.Cos(MathLib.DegToRad(_yaw)) * moveFactor;
-                newPos.Y += (float)Math.Sin(MathLib.DegToRad(_yaw)) * moveFactor;
+                newPos.Y += (float) Math.Sin(MathLib.DegToRad(_yaw)) * moveFactor;
             }
 
             if (_keyboard[Key.S]) // S - BACKWARD

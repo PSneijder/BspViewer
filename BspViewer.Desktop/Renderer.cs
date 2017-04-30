@@ -1,5 +1,4 @@
-﻿using HalfLife.Sharp.Utils;
-using OpenTK;
+﻿using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System;
 using System.Collections.Generic;
@@ -19,7 +18,6 @@ namespace BspViewer
         private FaceBuffer[] _faceBufferRegions;
 
         private int _vertexBuffer;
-        private int _normalBuffer;
 
         public Renderer(BspMap map)
             : base(map)
@@ -56,7 +54,7 @@ namespace BspViewer
                     Count = face.NumEdges
                 };
 
-                //var texInfo = Map.TextureInfos[face.TextureInfo];
+                var texInfo = Map.TextureInfos[face.TextureInfo];
                 var plane = Map.Planes[face.PlaneId];
 
                 var normal = plane.Normal;
@@ -69,13 +67,13 @@ namespace BspViewer
                     if (edgeIndex > 0)
                     {
                         var edge = Map.Edges[edgeIndex];
-                        vertexIndex = edge.Vertex[0];
+                        vertexIndex = edge.Vertices[0];
                     }
                     else
                     {
                         edgeIndex *= -1;
                         var edge = Map.Edges[edgeIndex];
-                        vertexIndex = edge.Vertex[1];
+                        vertexIndex = edge.Vertices[1];
                     }
 
                     var vertex = Map.Vertices[vertexIndex].Point;
@@ -102,10 +100,6 @@ namespace BspViewer
             _vertexBuffer = GL.GenBuffer();
             GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
             GL.BufferData(BufferTarget.ArrayBuffer, new IntPtr(vertices.Length * BlittableValueType.StrideOf(vertices)), vertices, BufferUsageHint.StaticDraw);
-
-            //_normalBuffer = GL.GenBuffer();
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, _normalBuffer);
-            //GL.BufferData(BufferTarget.ArrayBuffer, (normals.Length * sizeof(float)), normals, BufferUsageHint.StaticDraw);
         }
 
         protected override void RenderFace(int faceIndex)
@@ -133,6 +127,7 @@ namespace BspViewer
                     mode = BeginMode.Polygon;
                     break;
             }
+
             GL.Begin(mode);
             for (int i = 0; i < Map.Faces[faceIndex].NumEdges; i++)
             {
@@ -149,7 +144,7 @@ namespace BspViewer
                 if (iEdge > 0)
                 {
                     var edge = Map.Edges[iEdge];
-                    var point = Map.Vertices[edge.Vertex[0]].Point;
+                    var point = Map.Vertices[edge.Vertices[0]].Point;
                     var vertex = new Vector3(point[0], point[1], point[2]);
 
                     GL.Vertex3(vertex.X, vertex.Y, vertex.Z);
@@ -159,7 +154,7 @@ namespace BspViewer
                     iEdge *= -1;
 
                     var edge = Map.Edges[iEdge];
-                    var point = Map.Vertices[edge.Vertex[1]].Point;
+                    var point = Map.Vertices[edge.Vertices[1]].Point;
                     var vertex = new Vector3(point[0], point[1], point[2]);
 
                     GL.Vertex3(vertex.X, vertex.Y, vertex.Z);
@@ -170,21 +165,6 @@ namespace BspViewer
 
         protected override void RenderLevel(BspVector cameraPos)
         {
-            // enable/disable the required attribute arrays
-            //GL.EnableVertexAttribArray(SimpleGame.TexCoordLocation);
-            //GL.EnableVertexAttribArray(SimpleGame.LightmapCoordLocation);
-            //GL.EnableVertexAttribArray(SimpleGame.NormalLocation);
-            //GL.DisableVertexAttribArray(SimpleGame.ColorLocation);
-
-            //// Bind the vertex buffer
-            GL.BindBuffer(BufferTarget.ArrayBuffer, _vertexBuffer);
-
-            //GL.VertexAttribPointer(SimpleGame.PositionLocation, 3, VertexAttribPointerType.Float, false, 0, 0);
-
-            //// Bind the normal buffer
-            //GL.BindBuffer(BufferTarget.ArrayBuffer, _normalBuffer);
-            //GL.VertexAttribPointer(SimpleGame.NormalLocation, 3, VertexAttribPointerType.Float, false, 0, 0);
-
             // Get the leaf where the camera is in
             int cameraLeaf = TraverseTree(cameraPos, 0);
 

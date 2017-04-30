@@ -18,6 +18,20 @@ namespace BspViewer.Extensions
             return floats;
         }
 
+        public static uint[] ReadUInt8Array(this BinaryReader reader, long offset, int count)
+        {
+            reader.BaseStream.Seek(offset, SeekOrigin.Begin);
+
+            uint[] integers = new uint[count];
+
+            for (int i = 0; i < count; i++)
+            {
+                integers[i] = reader.ReadByte();
+            }
+
+            return integers;
+        }
+
         public static int[] ReadInt32Array(this BinaryReader reader, int count = 3)
         {
             int[] integers = new int[count];

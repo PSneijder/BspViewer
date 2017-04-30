@@ -23,6 +23,8 @@ namespace BspViewer
         public BspClipNode[] ClipNodes { get; internal set; }
         public short[] MarkSurfaces { get; internal set; }
         public int[] SurfEdges { get; internal set; }
+
+        public BspTextureHeader TextureHeader { get; internal set; }
         public BspMipTexture[] MipTextures { get; internal set; }
         public BspTextureInfo[] TextureInfos { get; internal set; }
 

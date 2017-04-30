@@ -3,7 +3,6 @@ using System.IO;
 using System.Text;
 using BspViewer.Extensions;
 using System.Drawing;
-using HalfLife.Sharp.Utils;
 using System;
 
 namespace BspViewer
@@ -24,6 +23,8 @@ namespace BspViewer
         private BspClipNode[] _clipNodes;
         private short[] _markSurfaces;
         private int[] _surfEdges;
+
+        private BspTextureHeader _textureHeader;
         private BspMipTexture[] _mipTextures;
         private BspTextureInfo[] _textureInfos;
 
@@ -56,6 +57,8 @@ namespace BspViewer
                 _clipNodes = ReadClipNodes(reader);
                 _markSurfaces = ReadMarkSurfaces(reader);
                 _surfEdges = ReadSurfEdges(reader);
+
+                _textureHeader = ReadTextureHeader(reader);
                 _mipTextures = ReadMipTextures(reader);
                 _textureInfos = ReadTextureInfos(reader);
 
@@ -79,12 +82,30 @@ namespace BspViewer
                 ClipNodes = _clipNodes,
                 MarkSurfaces = _markSurfaces,
                 SurfEdges = _surfEdges,
+
+                TextureHeader = _textureHeader,
                 MipTextures = _mipTextures,
                 TextureInfos = _textureInfos,
 
                 //VisList = _vis,
                 FaceColors = CreateRandomFaceColors(),
             };
+        }
+
+        private BspTextureHeader ReadTextureHeader(BinaryReader reader)
+        {
+            BspLump entitiesLump = _header.Lumps[BspDefs.LUMP_TEXTURES];
+            reader.BaseStream.Seek(entitiesLump.Offset, SeekOrigin.Begin);
+
+            int numberOfTextures = reader.ReadInt32();
+            int[] mipTexturesOffsets = new int[numberOfTextures];
+
+            for (int i = 0; i < numberOfTextures; i++)
+            {
+                mipTexturesOffsets[i] = (entitiesLump.Offset + reader.ReadInt32());
+            }
+
+            return new BspTextureHeader { NumberMipTextures = numberOfTextures, Offsets = mipTexturesOffsets };
         }
 
         private Color[] CreateRandomFaceColors()
@@ -261,7 +282,7 @@ namespace BspViewer
             var edges = new List<BspEdge>();
             for (int i = 0; i < numEdges; i++)
             {
-                edges.Add(new BspEdge { Vertex = reader.ReadUInt16Array() });
+                edges.Add(new BspEdge { Vertices = reader.ReadUInt16Array() });
             }
 
             return edges.ToArray();

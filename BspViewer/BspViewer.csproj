@@ -47,7 +47,11 @@
     <Compile Include="SourceMap\BspLumps.cs" />
     <Compile Include="SourceMap\BspMap.cs" />
     <Compile Include="SourceMap\BspRenderer.cs" />
+    <Compile Include="SourceMap\WadDefs.cs" />
+    <Compile Include="SourceMap\WadLoader.cs" />
+    <Compile Include="SourceMap\WadLumps.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
+    <Compile Include="Utils\MathLib.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />
