@@ -151,7 +151,7 @@ namespace BspViewer
 
     public struct BspTextureData
     {
-        public BspTextureData(float[] textureData, int width, int height, string name)
+        public BspTextureData(uint[] textureData, int width, int height, string name)
             : this()
         {
             TextureData = textureData;
@@ -160,7 +160,7 @@ namespace BspViewer
             Name = name;
         }
 
-        public float[] TextureData { get; private set; }
+        public uint[] TextureData { get; private set; }
         public int Width { get; private set; }
         public int Height { get; private set; }
         public string Name { get; private set; }

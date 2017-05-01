@@ -13,7 +13,7 @@ namespace BspViewer
     {
         private Renderer _renderer;
         private Camera _camera;
-        
+
         public Viewer()
             : base(640, 480, GraphicsMode.Default, AppDomain.CurrentDomain.FriendlyName)
         {
@@ -38,7 +38,7 @@ namespace BspViewer
 
             var wadLoader = new WadLoader(map, fileName, wadFileNames);
             var textures = wadLoader.Load();
-
+            
             _renderer = new Renderer(map, textures);
             _camera = new Camera(this);
 

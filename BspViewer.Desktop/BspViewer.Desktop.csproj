@@ -54,7 +54,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\MathLib.cs" />
-    <Compile Include="Utils\TexUtil.cs" />
     <Compile Include="Viewer.cs" />
   </ItemGroup>
   <ItemGroup>

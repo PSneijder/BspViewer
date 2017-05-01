@@ -52,6 +52,7 @@
     <Compile Include="SourceMap\WadLumps.cs" />
     <Compile Include="Utils\ColorUtils.cs" />
     <Compile Include="Utils\MathLib.cs" />
+    <Compile Include="Utils\TexUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

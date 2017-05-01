@@ -20,7 +20,7 @@ namespace BspViewer
         
         private WadHeader _header;
 
-        private BspTextureData[] _textureLookup;
+        private List<BspTextureData> _textureLookup;
         private List<MissingTexture> _missingTextures;
 
         public WadLoader(BspMap map, string mapFileName, string[] wadFileNames)
@@ -52,7 +52,7 @@ namespace BspViewer
                 }
             }
 
-            return _textureLookup;
+            return _textureLookup.ToArray();
         }
 
         private WadHeader ReadHeader(BinaryReader reader)
@@ -123,7 +123,7 @@ namespace BspViewer
 
             // Texture images
 
-            _textureLookup = new BspTextureData[_map.Faces.Length];
+            _textureLookup = new List<BspTextureData>();
             _missingTextures = new List<MissingTexture>();
 
             for (var i = 0; i < _map.MipTextures.Length; i++)
@@ -140,14 +140,14 @@ namespace BspViewer
                     if (texture.TextureData != null)
                     {
                         // the texture has been found in a loaded wad
-                        _textureLookup[i] = texture;
+                        _textureLookup.Add(texture);
 
                         Debug.WriteLine("Texture " + mipTexture.Name + " found");
                     }
                     else
                     {
                         // bind simple white texture to do not disturb lightmaps
-                        _textureLookup[i] = whiteTexture;
+                        _textureLookup.Add(whiteTexture);
 
                         // store the name and position of this missing texture,
                         // so that it can later be loaded to the right position by calling loadMissingTextures()
@@ -166,7 +166,7 @@ namespace BspViewer
                     //var offset = _map.TextureHeader.Offsets[i];
                     var offset = _map.Header.Lumps[BspDefs.LUMP_TEXTURES].Offset + _map.TextureHeader.Offsets[i];
 
-                    _textureLookup[i] = FetchTextureAtOffset(mapReader, offset);
+                    _textureLookup.Add(FetchTextureAtOffset(mapReader, offset));
 
                     Debug.WriteLine("Fetched interal texture " + mipTexture.Name);
                 }
@@ -199,7 +199,7 @@ namespace BspViewer
             var textureIndexes = mapReader.ReadUInt8Array(offset + mipTex.Offsets[0], width * height);
 
             // Allocate storage for the rgba texture
-            var textureData = new float[width * height * 4];
+            var textureData = new uint[width * height * 4];
 
             // Translate the texture from indexes to rgba
             for (var j = 0; j < width * height; j++)
@@ -228,10 +228,10 @@ namespace BspViewer
             return new BspTextureData(); // ToDo
         }
 
-        private void ApplyAlphaSections(ref float[] pixels, int width, int height, uint keyR, uint keyG, uint keyB)
+        private void ApplyAlphaSections(ref uint[] pixels, int width, int height, uint keyR, uint keyG, uint keyB)
         {
             // Create an equally sized pixel buffer initialized to the key color 
-            var rgbBuffer = new float[width * height * 3];
+            var rgbBuffer = new uint[width * height * 3];
 
             for (var y = 0; y < height; y++)
             {
@@ -395,9 +395,9 @@ namespace BspViewer
                             colorSum[2] /= count;
 
                             var bufIndex = (y * width + x) * 3;
-                            rgbBuffer[bufIndex + 0] = (float) Math.Round(colorSum[0]);
-                            rgbBuffer[bufIndex + 1] = (float) Math.Round(colorSum[1]);
-                            rgbBuffer[bufIndex + 2] = (float) Math.Round(colorSum[2]);
+                            rgbBuffer[bufIndex + 0] = (uint) Math.Round(colorSum[0]);
+                            rgbBuffer[bufIndex + 1] = (uint) Math.Round(colorSum[1]);
+                            rgbBuffer[bufIndex + 2] = (uint) Math.Round(colorSum[2]);
                         }
                     }
                 }
